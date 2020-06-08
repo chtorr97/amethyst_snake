@@ -1,7 +1,6 @@
 [package]
 name = "amethyst-starter-2d"
-version = "0.2.0"
-authors = ["Hilmar Wiegand <me@hwgnd.de>"]
+version = "0.1"
 edition = "2018"
 
 [dependencies]
