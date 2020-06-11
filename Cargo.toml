@@ -1,11 +1,12 @@
 [package]
-name = "amethyst-starter-2d"
-version = "0.1"
+name = "snake"
+version = "0.0.1"
 edition = "2018"
 
 [dependencies]
 amethyst = "0.15.0"
 log = { version = "0.4.8", features = ["serde"] }
+nalgebra-glm = "0.7.0"
 
 [features]
 default = ["vulkan"]
