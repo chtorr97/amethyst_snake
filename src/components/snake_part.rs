@@ -7,7 +7,6 @@ pub enum SnakePartType {
 }
 
 pub struct SnakePartComponent {
-    pub position: glm::IVec2,
     pub next_snake_part: Option<Entity>,
 }
 

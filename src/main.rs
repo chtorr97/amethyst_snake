@@ -29,7 +29,6 @@ fn main() -> amethyst::Result<()> {
         InputBundle::<StringBindings>::new().with_bindings_from_file(bindings_config)?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
         .with_bundle(input_bundle)?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
@@ -39,16 +38,18 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderFlat2D::default()),
         )?
-        .with(systems::InputSystem, "snake_input_system", &[])
+        .with(systems::InputSystem, "snake_input", &[])
+        .with(systems::MoveSnakeSystem, "snake_move", &["snake_input"])
         .with(
-            systems::MoveSnakeSystem,
-            "move_snake_system",
-            &["snake_input_system"],
+            systems::TransformPositionsSystem,
+            "transform_position",
+            &["snake_move"],
         )
+        .with_bundle(TransformBundle::new().with_dep(&["transform_position"]))?
         .with(
             systems::SnakeRenderSystem,
-            "snake_render_system",
-            &["move_snake_system"],
+            "snake_render",
+            &["transform_system"],
         );
 
     let mut game = Application::new(resources, snake::SnakeGame, game_data)?;

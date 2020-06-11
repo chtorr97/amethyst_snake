@@ -8,7 +8,8 @@ use amethyst::{
 };
 use log::info;
 
-use crate::components::{SnakeHeadComponent, SnakePartComponent};
+use crate::components::{GamePositionComponent, SnakeHeadComponent, SnakePartComponent};
+use std::ops::Deref;
 
 const ARENA_WIDTH: i32 = 52;
 const ARENA_HEIGHT: i32 = 32;
@@ -20,10 +21,6 @@ impl SimpleState for SnakeGame {
         let world = data.world;
 
         let dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
-
-        world.register::<SnakePartComponent>();
-
-        init_camera(world, &dimensions);
 
         let sprites = load_sprites(world);
 
@@ -39,6 +36,7 @@ impl SimpleState for SnakeGame {
         world.insert(snake_sprites);
         world.insert(next_direction);
 
+        init_camera(world, &dimensions);
         init_board(world);
         init_snake(world);
     }
@@ -117,11 +115,6 @@ fn read_sprite_renderer(world: &World, sprite_key: SnakeSpritesKeys) -> SpriteRe
 fn init_board(world: &mut World) {
     for x in 0..ARENA_WIDTH {
         for y in 0..ARENA_HEIGHT {
-            let x_pos = x * 32;
-            let y_pos = y * 32;
-            let mut transform = Transform::default();
-            transform.set_translation_xyz(x_pos as f32, y_pos as f32, -1.0);
-
             let sprite_key = if x == 0 || y == 0 || x == ARENA_WIDTH - 1 || y == ARENA_HEIGHT - 1 {
                 SnakeSpritesKeys::Wall
             } else {
@@ -133,7 +126,12 @@ fn init_board(world: &mut World) {
             world
                 .create_entity()
                 .with(sprite_render)
-                .with(transform)
+                .with(GamePositionComponent::new(x, y))
+                .with({
+                    let mut transform = Transform::default();
+                    transform.set_translation_z(0.0);
+                    transform
+                })
                 .build();
         }
     }
@@ -153,29 +151,41 @@ fn init_snake(world: &mut World) {
     let e2 = world
         .create_entity()
         .with(SnakePartComponent {
-            position: glm::vec2(10, 10),
             next_snake_part: None,
         })
+        .with(GamePositionComponent::new(10, 10))
         .with(sprite_renderer_body.clone())
-        .with(transform_e2)
+        .with({
+            let mut transform = Transform::default();
+            transform.set_translation_z(0.5);
+            transform
+        })
         .build();
     let e1 = world
         .create_entity()
         .with(SnakePartComponent {
-            position: glm::vec2(10, 10),
             next_snake_part: Some(e2),
         })
+        .with(GamePositionComponent::new(11, 10))
         .with(sprite_renderer_body)
-        .with(transform_e1)
+        .with({
+            let mut transform = Transform::default();
+            transform.set_translation_z(0.5);
+            transform
+        })
         .build();
     world
         .create_entity()
         .with(SnakePartComponent {
-            position: glm::vec2(11, 10),
             next_snake_part: Some(e1),
         })
+        .with(GamePositionComponent::new(12, 10))
         .with(sprite_renderer_head)
-        .with(transform_head)
+        .with({
+            let mut transform = Transform::default();
+            transform.set_translation_z(0.5);
+            transform
+        })
         .with(SnakeHeadComponent {})
         .build();
 }

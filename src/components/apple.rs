@@ -1,9 +1,8 @@
 use amethyst::ecs::prelude::*;
 
-pub struct AppleComponent {
-    position: glm::IVec2,
-}
+#[derive(Default)]
+pub struct AppleComponent {}
 
 impl Component for AppleComponent {
-    type Storage = DenseVecStorage<Self>;
+    type Storage = NullStorage<Self>;
 }
