@@ -41,9 +41,14 @@ fn main() -> amethyst::Result<()> {
         .with(systems::InputSystem, "snake_input", &[])
         .with(systems::MoveSnakeSystem, "snake_move", &["snake_input"])
         .with(
+            systems::AppleHandlerSystem,
+            "apple_handler",
+            &["snake_move"],
+        )
+        .with(
             systems::TransformPositionsSystem,
             "transform_position",
-            &["snake_move"],
+            &["apple_handler"],
         )
         .with_bundle(TransformBundle::new().with_dep(&["transform_position"]))?
         .with(

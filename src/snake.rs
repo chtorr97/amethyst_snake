@@ -8,11 +8,15 @@ use amethyst::{
 };
 use log::info;
 
-use crate::components::{GamePositionComponent, SnakeHeadComponent, SnakePartComponent};
+use crate::components::{
+    AppleComponent, GamePositionComponent, SnakeHeadComponent, SnakePartComponent,
+};
 use std::ops::Deref;
 
-const ARENA_WIDTH: i32 = 52;
-const ARENA_HEIGHT: i32 = 32;
+pub const ARENA_WIDTH: i32 = 52;
+pub const ARENA_HEIGHT: i32 = 32;
+pub const ARENA_PLAYABLE_WIDTH: i32 = 50;
+pub const ARENA_PLAYABLE_HEIGHT: i32 = 30;
 
 pub struct SnakeGame;
 
@@ -39,6 +43,7 @@ impl SimpleState for SnakeGame {
         init_camera(world, &dimensions);
         init_board(world);
         init_snake(world);
+        init_apple(world);
     }
 
     fn handle_event(
@@ -190,6 +195,21 @@ fn init_snake(world: &mut World) {
         .build();
 }
 
+fn init_apple(world: &mut World) {
+    let apple_sprite = read_sprite_renderer(world, SnakeSpritesKeys::Apple);
+    let mut apple_transform = Transform::default();
+    apple_transform.set_translation_xyz(5.0, 5.0, 0.5);
+    world
+        .create_entity()
+        .with(AppleComponent {})
+        .with(apple_transform)
+        .with(apple_sprite)
+        .with(GamePositionComponent::new(5, 5))
+        .build();
+
+    world.insert(AppleWasEaten { was_eaten: false });
+}
+
 pub enum SnakeSpritesKeys {
     SnakeHead,
     SnakeBody,
@@ -221,4 +241,8 @@ pub enum Direction {
 pub struct NextDirection {
     pub direction: Direction,
     pub time_since_last_action: Stopwatch,
+}
+
+pub struct AppleWasEaten {
+    pub was_eaten: bool,
 }

@@ -20,16 +20,16 @@ impl<'s> System<'s> for SnakeRenderSystem {
             let mut last_entity = None;
             loop {
                 if let Some(next_body_part_entity) = next_to_check {
-                    sprites
-                        .get(next_body_part_entity)
-                        .replace(&sprite_asset.get_sprite_clone(SnakeSpritesKeys::SnakeBody));
+                    if let Some(sprite) = sprites.get_mut(next_body_part_entity) {
+                        *sprite = sprite_asset.get_sprite_clone(SnakeSpritesKeys::SnakeBody);
+                    }
                     next_to_check = parts.get(next_body_part_entity).unwrap().next_snake_part;
                     last_entity = Some(next_body_part_entity);
                 } else {
                     if let Some(entity) = last_entity {
-                        sprites
-                            .get(entity)
-                            .replace(&sprite_asset.get_sprite_clone(SnakeSpritesKeys::SnakeTail));
+                        if let Some(sprite) = sprites.get_mut(entity) {
+                            *sprite = sprite_asset.get_sprite_clone(SnakeSpritesKeys::SnakeTail);
+                        }
                     }
                     break;
                 }

@@ -1,6 +1,5 @@
 use amethyst::{core::transform::Transform, ecs::prelude::*};
 
-// #[derive(Clone)]
 pub struct GamePositionComponent {
     pub position: glm::IVec2,
 }
