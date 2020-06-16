@@ -9,10 +9,12 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
+    ui::{RenderUi, UiBundle},
     utils::application_root_dir,
 };
 
 mod components;
+mod game_over;
 mod snake;
 mod systems;
 
@@ -29,21 +31,27 @@ fn main() -> amethyst::Result<()> {
         InputBundle::<StringBindings>::new().with_bindings_from_file(bindings_config)?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(input_bundle)?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                        .with_clear([0.3, 0.3, 0.3, 1.0]),
                 )
-                .with_plugin(RenderFlat2D::default()),
+                .with_plugin(RenderFlat2D::default())
+                .with_plugin(RenderUi::default()),
         )?
+        .with_bundle(input_bundle)?
         .with(systems::InputSystem, "snake_input", &[])
         .with(systems::MoveSnakeSystem, "snake_move", &["snake_input"])
         .with(
+            systems::SnakeCollisionSystem,
+            "snake_collision",
+            &["snake_move"],
+        )
+        .with(
             systems::AppleHandlerSystem,
             "apple_handler",
-            &["snake_move"],
+            &["snake_collision"],
         )
         .with(
             systems::TransformPositionsSystem,
@@ -51,6 +59,7 @@ fn main() -> amethyst::Result<()> {
             &["apple_handler"],
         )
         .with_bundle(TransformBundle::new().with_dep(&["transform_position"]))?
+        .with_bundle(UiBundle::<StringBindings>::new())?
         .with(
             systems::SnakeRenderSystem,
             "snake_render",

@@ -11,6 +11,8 @@ use log::info;
 use crate::components::{
     AppleComponent, GamePositionComponent, SnakeHeadComponent, SnakePartComponent,
 };
+use crate::game_over::GameOverState;
+use crate::snake::GameState::GameOver;
 use std::ops::Deref;
 
 pub const ARENA_WIDTH: i32 = 52;
@@ -23,6 +25,8 @@ pub struct SnakeGame;
 impl SimpleState for SnakeGame {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
+
+        world.delete_all();
 
         let dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
 
@@ -39,6 +43,7 @@ impl SimpleState for SnakeGame {
 
         world.insert(snake_sprites);
         world.insert(next_direction);
+        world.insert(GameState::Playing);
 
         init_camera(world, &dimensions);
         init_board(world);
@@ -62,6 +67,16 @@ impl SimpleState for SnakeGame {
         }
 
         Trans::None
+    }
+
+    fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        let state = _data.world.read_resource::<GameState>();
+
+        let mut trans = SimpleTrans::None;
+        if *state == GameState::GameOver {
+            trans = SimpleTrans::Replace(Box::new(GameOverState))
+        }
+        trans
     }
 }
 
@@ -245,4 +260,10 @@ pub struct NextDirection {
 
 pub struct AppleWasEaten {
     pub was_eaten: bool,
+}
+
+#[derive(Eq, PartialEq)]
+pub enum GameState {
+    Playing,
+    GameOver,
 }
