@@ -33,21 +33,44 @@ impl<'s> System<'s> for AppleHandlerSystem {
 
         let mut snake_ate_apple = false;
 
-        for (_, game_position) in (&apples, &mut game_positions).join() {
-            let apple_position = &mut game_position.position;
+        for (_, apple_position) in (&apples, &mut game_positions).join() {
             for snake_head_position in &snake_head_positions {
-                if *snake_head_position == *apple_position {
+                if *snake_head_position == apple_position.position {
                     snake_ate_apple = true;
-                    let mut rng = thread_rng();
-                    // TODO: make sure it is not on other snake pieces.
-                    let x = rng.gen_range(0, ARENA_PLAYABLE_WIDTH) + 1;
-                    let y = rng.gen_range(0, ARENA_PLAYABLE_HEIGHT) + 1;
-
-                    *apple_position = glm::vec2(x, y);
-
-                    apple_was_eaten.was_eaten = true;
                 }
             }
+        }
+
+        if snake_ate_apple {
+            let mut snake_positions = vec![];
+            let mut new_apple_position = (0, 0);
+            for (_, game_position) in (&snake_parts, &game_positions).join() {
+                snake_positions.push(game_position.position);
+            }
+
+            new_apple_position = get_new_apple_position(snake_positions);
+
+            for (_, apple_position) in (&apples, &mut game_positions).join() {
+                apple_position.position = glm::vec2(new_apple_position.0, new_apple_position.1);
+            }
+
+            apple_was_eaten.was_eaten = true;
+        }
+    }
+}
+
+fn get_new_apple_position(snake_positions: Vec<glm::IVec2>) -> (i32, i32) {
+    let mut rng = thread_rng();
+    loop {
+        let x = rng.gen_range(0, ARENA_PLAYABLE_WIDTH) + 1;
+        let y = rng.gen_range(0, ARENA_PLAYABLE_HEIGHT) + 1;
+
+        let position_ok = snake_positions
+            .iter()
+            .all(|position| position.x != x || position.y != y);
+
+        if position_ok {
+            return (x, y);
         }
     }
 }
