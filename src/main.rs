@@ -58,13 +58,13 @@ fn main() -> amethyst::Result<()> {
             "transform_position",
             &["apple_handler"],
         )
-        .with_bundle(TransformBundle::new().with_dep(&["transform_position"]))?
-        .with_bundle(UiBundle::<StringBindings>::new())?
         .with(
             systems::SnakeRenderSystem,
             "snake_render",
-            &["transform_system"],
-        );
+            &["transform_position"],
+        )
+        .with_bundle(TransformBundle::new().with_dep(&["snake_render"]))?
+        .with_bundle(UiBundle::<StringBindings>::new())?;
 
     let mut game = Application::new(resources, snake::SnakeGame, game_data)?;
     game.run();
