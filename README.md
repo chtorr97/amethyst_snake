@@ -5,7 +5,7 @@ Snake game developed in Rust using the Amethyst game engine.
 
 ## States
 ### Snake
-The main state in which the game runs. It transitions to GameOver if the snake hits itself or a wall.
+The main state in which the game runs. It transitions to `GameOver` if the snake hits itself or a wall.
 
 ### GameOver
 Simple state that displays a "Game Over" text for two seconds before restarting the game.
