@@ -40,14 +40,7 @@ impl<'s> System<'s> for SnakeRenderSystem {
             let mut last_entity = None;
 
             next_position = &game_positions.get(next_to_check.unwrap()).unwrap().position;
-            let head_direction = get_next_direction(current_position, next_position);
-
-            let mut angle = match head_direction {
-                Direction::Up => PI,
-                Direction::Down => 0.0,
-                Direction::Right => PI / 2.0,
-                Direction::Left => -PI / 2.0,
-            };
+            let angle = get_head_angle(current_position, next_position);
 
             let mut head_transform = transforms.get_mut(head_entity.unwrap()).unwrap();
             head_transform.set_rotation_2d(angle);
@@ -66,34 +59,20 @@ impl<'s> System<'s> for SnakeRenderSystem {
 
                     if let Some(sprite) = sprites.get_mut(next_body_part_entity) {
                         if are_axis_aligned(previous_position, next_position) {
-                            let are_x_aligned = are_x_aligned(previous_position, next_position);
-
-                            let mut angle = match are_x_aligned {
-                                true => 0.0,
-                                false => PI / 2.0,
-                            };
+                            let angle = get_straight_angle(next_position, previous_position);
 
                             let mut transform = transforms.get_mut(next_body_part_entity).unwrap();
                             transform.set_rotation_2d(angle);
 
                             *sprite = sprite_asset.get_sprite_clone(SnakeSpritesKeys::SnakeBody);
                         } else {
-                            let direction_1 =
-                                get_next_direction(previous_position, current_position);
-                            let direction_2 = get_next_direction(current_position, next_position);
-                            let angle = match (direction_1, direction_2) {
-                                (Direction::Right, Direction::Down)
-                                | (Direction::Up, Direction::Left) => 0.0,
-                                (Direction::Right, Direction::Up)
-                                | (Direction::Down, Direction::Left) => -PI / 2.0,
-                                (Direction::Down, Direction::Right)
-                                | (Direction::Left, Direction::Up) => PI,
-                                (Direction::Left, Direction::Down)
-                                | (Direction::Up, Direction::Right) => PI / 2.0,
-                                _ => break,
-                            };
+                            let angle =
+                                get_turn_angle(current_position, next_position, previous_position);
+                            if angle.is_none() {
+                                break;
+                            }
                             let mut transform = transforms.get_mut(next_body_part_entity).unwrap();
-                            transform.set_rotation_2d(angle);
+                            transform.set_rotation_2d(angle.unwrap());
                             *sprite = sprite_asset.get_sprite_clone(SnakeSpritesKeys::SnakeTurn);
                         }
                     }
@@ -103,14 +82,7 @@ impl<'s> System<'s> for SnakeRenderSystem {
             if let Some(entity) = last_entity {
                 current_position = next_position;
                 if let Some(sprite) = sprites.get_mut(entity) {
-                    let tail_direction = get_next_direction(previous_position, current_position);
-
-                    let mut angle = match tail_direction {
-                        Direction::Up => PI,
-                        Direction::Down => 0.0,
-                        Direction::Right => PI / 2.0,
-                        Direction::Left => -PI / 2.0,
-                    };
+                    let angle = get_tail_angle(current_position, previous_position);
 
                     let mut tail_transform = transforms.get_mut(entity).unwrap();
                     tail_transform.set_rotation_2d(angle);
@@ -147,4 +119,51 @@ fn are_x_aligned(previous_position: &glm::IVec2, next_position: &glm::IVec2) -> 
 
 fn are_y_aligned(previous_position: &glm::IVec2, next_position: &glm::IVec2) -> bool {
     previous_position.y == next_position.y
+}
+
+fn get_tail_angle(mut current_position: &glm::IVec2, mut previous_position: &glm::IVec2) -> f32 {
+    let tail_direction = get_next_direction(previous_position, current_position);
+
+    match tail_direction {
+        Direction::Up => PI,
+        Direction::Down => 0.0,
+        Direction::Right => PI / 2.0,
+        Direction::Left => -PI / 2.0,
+    }
+}
+
+fn get_turn_angle(
+    mut current_position: &glm::IVec2,
+    mut next_position: &glm::IVec2,
+    mut previous_position: &glm::IVec2,
+) -> Option<f32> {
+    let direction_1 = get_next_direction(previous_position, current_position);
+    let direction_2 = get_next_direction(current_position, next_position);
+    match (direction_1, direction_2) {
+        (Direction::Right, Direction::Down) | (Direction::Up, Direction::Left) => Some(0.0),
+        (Direction::Right, Direction::Up) | (Direction::Down, Direction::Left) => Some(-PI / 2.0),
+        (Direction::Down, Direction::Right) | (Direction::Left, Direction::Up) => Some(PI),
+        (Direction::Left, Direction::Down) | (Direction::Up, Direction::Right) => Some(PI / 2.0),
+        _ => None,
+    }
+}
+
+fn get_straight_angle(mut next_position: &glm::IVec2, mut previous_position: &glm::IVec2) -> f32 {
+    let are_x_aligned = are_x_aligned(previous_position, next_position);
+
+    match are_x_aligned {
+        true => 0.0,
+        false => PI / 2.0,
+    }
+}
+
+fn get_head_angle(mut current_position: &glm::IVec2, mut next_position: &glm::IVec2) -> f32 {
+    let head_direction = get_next_direction(current_position, next_position);
+
+    match head_direction {
+        Direction::Up => PI,
+        Direction::Down => 0.0,
+        Direction::Right => PI / 2.0,
+        Direction::Left => -PI / 2.0,
+    }
 }
